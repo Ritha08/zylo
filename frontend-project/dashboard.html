@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSSMS Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> tailwind.config = { darkMode: 'class' } </script>
+    <style>
+        * { transition: all 0.2s ease; }
+        body { background-color: #000000; font-family: 'Segoe UI', system-ui; }
+        .neon-card {
+            background: rgba(15,15,15,0.95);
+            border: 1px solid rgba(0,255,255,0.3);
+            box-shadow: 0 0 12px rgba(0,255,255,0.2);
+            border-radius: 20px;
+        }
+        .neon-input, .neon-select {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            color: #0ff;
+            border-radius: 12px;
+            padding: 8px 12px;
+        }
+        .neon-input:focus, .neon-select:focus {
+            border-color: #0ff;
+            box-shadow: 0 0 8px #0ff;
+            outline: none;
+        }
+        .neon-button {
+            background: linear-gradient(95deg, #00c6ff, #0072ff);
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 40px;
+            padding: 8px 20px;
+            cursor: pointer;
+        }
+        .neon-button:hover {
+            box-shadow: 0 0 14px #00c6ff;
+            transform: scale(1.02);
+        }
+        .tab-btn {
+            background: #1a1a1a;
+            color: #ccc;
+            border: 1px solid #2a2a2a;
+            border-radius: 40px;
+            padding: 6px 18px;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #0ff, #0072ff);
+            color: black;
+            border-color: #0ff;
+            box-shadow: 0 0 10px #0ff;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .slot-card {
+            background: #0a0a0a;
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: white;
+        }
+        .slot-card .text-xs { color: #ddd; }
+        .slot-card.available { border: 2px solid #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .slot-card.occupied { border: 2px solid #3b82f6; box-shadow: 0 0 8px #3b82f6; cursor: not-allowed; }
+        .slot-card.booked { border: 2px solid #a855f7; box-shadow: 0 0 8px #a855f7; }
+        .slot-card.special { border: 2px solid #f59e0b; box-shadow: 0 0 8px #f59e0b; background: #1a0a00; cursor: default; }
+        .slot-card.selected { transform: scale(1.02); background: #1f1f1f; }
+        
+        table, th, td { color: #ffffff !important; }
+        th { background: #111; color: #0ff !important; }
+        td { color: #f0f0f0 !important; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #0ff; border-radius: 10px; }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 26px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #222;
+            transition: 0.3s;
+            border-radius: 26px;
+            border: 1px solid #0ff;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 2px;
+            background-color: #0ff;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #0ff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+            background-color: #000;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f1f1f;
+            border-left: 5px solid #0ff;
+            color: #0ff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(0,255,255,0.3);
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        .reset-btn { background: #ff4444; margin-left: 10px; }
+        .booking-question {
+            background: #0a0a0a;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .radio-group { display: flex; gap: 20px; color: #0ff; }
+    </style>
+</head>
+<body class="bg-black">
+
+<div class="container mx-auto p-4">
+    <!-- Header -->
+    <div class="neon-card p-4 mb-6 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">PSSMS - Parking System</h1>
+        <div class="flex items-center gap-4">
+            <span id="userDisplay" class="text-cyan-300 font-medium"></span>
+            <button id="resetDataBtn" class="bg-red-700 hover:bg-red-800 text-white px-3 py-1 rounded-full text-sm reset-btn">Reset All Data</button>
+            <label class="toggle-switch">
+                <input type="checkbox" id="themeToggle">
+                <span class="slider"></span>
+            </label>
+            <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-full">Logout</button>
+        </div>
+    </div>
+
+    <!-- Tab Buttons -->
+    <div class="flex flex-wrap gap-3 mb-6" id="tabButtons">
+        <button class="tab-btn" data-tab="car">Car</button>
+        <button class="tab-btn" data-tab="slot">Parking Slots</button>
+        <button class="tab-btn" data-tab="record">Parking Record</button>
+        <button class="tab-btn" data-tab="payment">Payment</button>
+        <button class="tab-btn" data-tab="carreport">Car Report</button>
+        <button class="tab-btn" data-tab="report">Reports</button>
+        <button class="tab-btn" data-tab="slotreport">Slot Report</button>
+    </div>
+
+    <!-- Car Tab -->
+    <div id="car-tab" class="tab-content">
+        <div class="neon-card p-5 mb-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Add New Car</h2>
+            <form id="carForm" class="flex flex-wrap gap-3">
+                <input type="text" id="plateNumber" placeholder="Plate (ABC123D)" class="neon-input flex-1" required>
+                <input type="text" id="driverName" placeholder="Driver Name" class="neon-input flex-1" required>
+                <input type="text" id="phoneNumber" placeholder="Phone (078/072/073 + 7 digits)" class="neon-input flex-1" required>
+                <button type="submit" class="neon-button">Add Car & Continue to Entry</button>
+            </form>
+        </div>
+        <div class="neon-card p-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Cars List</h2>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Plate</th><th>Driver</th><th>Phone</th><th>Action</th></tr></thead><tbody id="carTableBody"></tbody></table></div>
+        </div>
+    </div>
+
+    <!-- Parking Slots Tab -->
+    <div id="slot-tab" class="tab-content">
+        <div class="neon-card p-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">All Slots (click Book to reserve)</h2>
+            <div id="slotsContainer" class="grid grid-cols-2 md:grid-cols-6 gap-4 max-h-96 overflow-y-auto p-2"></div>
+        </div>
+    </div>
+
+    <!-- Parking Record Tab -->
+    <div id="record-tab" class="tab-content">
+        <div class="neon-card p-5 mb-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Register Entry</h2>
+            <form id="entryForm" class="flex flex-col gap-4">
+                <select id="entryPlate" class="neon-select w-full" required></select>
+                <div class="booking-question">
+                    <label class="block text-gray-300 mb-2">Does this car have a booking?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="hasBooking" value="yes" class="mr-1"> Yes (show booked slots)</label>
+                        <label><input type="radio" name="hasBooking" value="no" class="mr-1" checked> No (show available slots)</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-300 mb-2">Choose Slot (click on a card)</label>
+                    <div id="slotSelectionContainer" class="grid grid-cols-2 md:grid-cols-6 gap-4 max-h-60 overflow-y-auto p-2 border border-gray-800 rounded-lg"></div>
+                    <input type="hidden" id="selectedSlot">
+                </div>
+                <label class="text-gray-300">Entry Time (defaults to now)</label>
+                <input type="datetime-local" id="entryTime" class="neon-input" required>
+                <button type="submit" class="neon-button w-full">Record Entry</button>
+            </form>
+        </div>
+        <div class="neon-card p-5 mb-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Update Exit (calculate fee automatically)</h2>
+            <form id="exitForm" class="flex flex-wrap gap-3">
+                <select id="exitRecord" class="neon-select flex-1" required></select>
+                <input type="datetime-local" id="exitTime" class="neon-input flex-1" required>
+                <button type="submit" class="neon-button">Set Exit & Calculate</button>
+            </form>
+        </div>
+        <div class="neon-card p-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Parking Records</h2>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Plate</th><th>Slot</th><th>Entry</th><th>Exit</th><th>Duration(min)</th><th>Amount(RWF)</th><th>Action</th></tr></thead><tbody id="recordTableBody"></tbody></table></div>
+        </div>
+    </div>
+
+    <!-- Payment Tab (auto-fill amount) -->
+    <div id="payment-tab" class="tab-content">
+        <div class="neon-card p-5 mb-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Record Payment</h2>
+            <form id="paymentForm" class="flex flex-wrap gap-3">
+                <select id="paymentRecord" class="neon-select flex-1" required></select>
+                <input type="number" id="amountPaid" placeholder="Amount (auto-filled)" class="neon-input flex-1" readonly style="background:#222; cursor:default;">
+                <input type="datetime-local" id="paymentDate" class="neon-input flex-1" required>
+                <button type="submit" class="neon-button">Record Payment</button>
+            </form>
+        </div>
+        <div class="neon-card p-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Payment History</h2>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Record ID</th><th>Plate</th><th>Entry</th><th>Exit</th><th>Amount Paid</th><th>Payment Date</th></tr></thead><tbody id="paymentTableBody"></tbody></table></div>
+        </div>
+    </div>
+
+    <!-- Car Report Tab (new) -->
+    <div id="carreport-tab" class="tab-content">
+        <div class="neon-card p-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Car Summary Report</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr><th>Plate</th><th>Driver</th><th>Phone</th><th>Total Visits</th><th>Total Time (hours)</th><th>Total Amount Due (RWF)</th><th>Total Paid (RWF)</th><th>Balance (RWF)</th></tr>
+                    </thead>
+                    <tbody id="carReportBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Tab (Daily payment report and bill) -->
+    <div id="report-tab" class="tab-content">
+        <div class="neon-card p-5 mb-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Daily Payment Report</h2>
+            <div class="flex gap-3 mb-4"><input type="date" id="reportDate" class="neon-input"><button id="generateReportBtn" class="neon-button">Generate</button></div>
+            <div id="dailyReportResult" class="text-white"></div>
+        </div>
+        <div class="neon-card p-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-3">Generate Bill</h2>
+            <div class="flex gap-3"><select id="billRecordSelect" class="neon-select flex-1"></select><button id="viewBillBtn" class="neon-button">View Bill</button></div>
+            <div id="billResult" class="mt-4 text-white"></div>
+        </div>
+    </div>
+
+    <!-- Slot Report Tab -->
+    <div id="slotreport-tab" class="tab-content">
+        <div class="neon-card p-5">
+            <h2 class="text-xl font-bold text-cyan-400 mb-4">Parking Slots Report</h2>
+            <div id="slotStatsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-white"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toast notification
+    function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerText = message;
+        if (isError) toast.style.borderLeftColor = '#ff4444';
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
+    }
+
+    // Default data factory (273 slots)
+    function createDefaultData() {
+        const slots = [];
+        for (let i=1;i<=80;i++) slots.push({ slotNumber: `A${i}`, slotStatus: 'available', isSpecial: false });
+        for (let i=1;i<=80;i++) slots.push({ slotNumber: `B${i}`, slotStatus: 'available', isSpecial: false });
+        for (let i=1;i<=70;i++) slots.push({ slotNumber: `C${i}`, slotStatus: 'available', isSpecial: false });
+        for (let i=1;i<=40;i++) slots.push({ slotNumber: `D${i}`, slotStatus: 'available', isSpecial: false });
+        slots.push({ slotNumber: 'ADMIN_SLOT', slotStatus: 'special', isSpecial: true, specialLabel: "Admin's Slot" });
+        slots.push({ slotNumber: 'MANAGER_SLOT', slotStatus: 'special', isSpecial: true, specialLabel: "Manager's Slot" });
+        slots.push({ slotNumber: 'RITHA_SLOT', slotStatus: 'special', isSpecial: true, specialLabel: "Ritha's Slot" });
+        return { cars: [], slots, records: [], payments: [] };
+    }
+
+    function loadGlobalData() {
+        const stored = localStorage.getItem('pssms_global_data');
+        if (stored) {
+            try { return JSON.parse(stored); } catch(e) { return createDefaultData(); }
+        }
+        return createDefaultData();
+    }
+    function saveGlobalData(data) { localStorage.setItem('pssms_global_data', JSON.stringify(data)); }
+
+    // New fee calculation: per 3 minutes (25 RWF per 3-min block)
+    function calculateAmount(entryTime, exitTime) {
+        const entry = new Date(entryTime), exit = new Date(exitTime);
+        const diffMinutes = (exit - entry) / (1000 * 60);
+        if (diffMinutes < 0) return { durationMinutes: 0, amount: 0, valid: false };
+        const blocks = Math.ceil(diffMinutes / 3); // each block = 3 minutes
+        const amount = blocks * 25; // 500 RWF per hour = 25 per 3 min
+        return { durationMinutes: diffMinutes.toFixed(2), amount: amount, valid: true };
+    }
+
+    function validatePlate(plate) { return /^[A-Z]{3}[0-9]{3}[A-Z]$/.test(plate); }
+    function validatePhone(phone) { return /^(078|072|073)[0-9]{7}$/.test(phone); }
+
+    let currentData = loadGlobalData();
+
+    function refreshSlotSelection() {
+        const hasBookingRadio = document.querySelector('input[name="hasBooking"]:checked');
+        const hasBooking = hasBookingRadio ? hasBookingRadio.value === 'yes' : false;
+        const slotSel = document.getElementById('slotSelectionContainer');
+        if (!slotSel) return;
+        let selectable = hasBooking 
+            ? currentData.slots.filter(s => !s.isSpecial && s.slotStatus === 'booked')
+            : currentData.slots.filter(s => !s.isSpecial && s.slotStatus === 'available');
+        slotSel.innerHTML = '';
+        if (selectable.length === 0) {
+            slotSel.innerHTML = '<p class="text-gray-400 col-span-full">No slots available for this selection</p>';
+            return;
+        }
+        selectable.forEach(slot => {
+            const card = document.createElement('div');
+            card.className = `slot-card ${slot.slotStatus}`;
+            card.innerHTML = `<div class="font-bold">${slot.slotNumber}</div><div class="text-xs">${slot.slotStatus === 'available' ? 'Available' : 'Booked'}</div>`;
+            card.onclick = () => {
+                document.querySelectorAll('#slotSelectionContainer .slot-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                document.getElementById('selectedSlot').value = slot.slotNumber;
+            };
+            slotSel.appendChild(card);
+        });
+    }
+
+    function setupPaymentAutoFill() {
+        const paymentSelect = document.getElementById('paymentRecord');
+        const amountField = document.getElementById('amountPaid');
+        paymentSelect.addEventListener('change', () => {
+            const recId = parseInt(paymentSelect.value);
+            if (recId) {
+                const record = currentData.records.find(r => r.id === recId);
+                if (record && record.amount) amountField.value = record.amount;
+                else amountField.value = '';
+            } else amountField.value = '';
+        });
+    }
+
+    function refreshUI() {
+        // Cars table
+        const carBody = document.getElementById('carTableBody');
+        carBody.innerHTML = '';
+        currentData.cars.forEach(car => {
+            const row = carBody.insertRow();
+            row.insertCell(0).innerText = car.plateNumber;
+            row.insertCell(1).innerText = car.driverName;
+            row.insertCell(2).innerText = car.phoneNumber;
+            const delBtn = document.createElement('button');
+            delBtn.innerText = 'Delete';
+            delBtn.className = 'bg-red-600 text-white px-2 py-1 rounded text-xs';
+            delBtn.onclick = () => {
+                if (confirm(`Delete car ${car.plateNumber}? This will NOT delete its parking records.`)) {
+                    currentData.cars = currentData.cars.filter(c => c.plateNumber !== car.plateNumber);
+                    saveGlobalData(currentData);
+                    refreshUI();
+                    showToast(`Car ${car.plateNumber} deleted`, false);
+                }
+            };
+            row.insertCell(3).appendChild(delBtn);
+        });
+
+        // Slot cards (ParkingSlots tab)
+        const slotsContainer = document.getElementById('slotsContainer');
+        slotsContainer.innerHTML = '';
+        currentData.slots.forEach(slot => {
+            const card = document.createElement('div');
+            let statusClass = slot.isSpecial ? 'special' : slot.slotStatus;
+            let statusText = slot.isSpecial ? slot.specialLabel : (slot.slotStatus === 'available' ? 'Available' : (slot.slotStatus === 'occupied' ? 'Occupied' : 'Booked'));
+            card.className = `slot-card ${statusClass}`;
+            card.innerHTML = `<div class="font-bold">${slot.slotNumber}</div><div class="text-xs mt-1">${statusText}</div>`;
+            if (!slot.isSpecial && slot.slotStatus !== 'occupied') {
+                const bookBtn = document.createElement('button');
+                bookBtn.innerText = 'Book';
+                bookBtn.className = 'mt-2 bg-purple-600 text-white text-xs px-2 py-1 rounded';
+                bookBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (slot.slotStatus === 'available') {
+                        slot.slotStatus = 'booked';
+                        saveGlobalData(currentData);
+                        refreshUI();
+                        showToast(`Slot ${slot.slotNumber} booked`, false);
+                    } else showToast('Slot already booked or occupied', true);
+                };
+                card.appendChild(bookBtn);
+            }
+            slotsContainer.appendChild(card);
+        });
+
+        // Records table (show duration in minutes)
+        const recordBody = document.getElementById('recordTableBody');
+        recordBody.innerHTML = '';
+        currentData.records.forEach(rec => {
+            const row = recordBody.insertRow();
+            row.insertCell(0).innerText = rec.plateNumber;
+            row.insertCell(1).innerText = rec.slotNumber;
+            row.insertCell(2).innerText = new Date(rec.entryTime).toLocaleString();
+            row.insertCell(3).innerText = rec.exitTime ? new Date(rec.exitTime).toLocaleString() : '—';
+            row.insertCell(4).innerText = rec.durationMinutes ? rec.durationMinutes + ' min' : '—';
+            row.insertCell(5).innerText = rec.amount || '—';
+            const delBtn = document.createElement('button');
+            delBtn.innerText = 'Delete';
+            delBtn.className = 'bg-red-600 text-white px-2 py-1 rounded text-xs';
+            delBtn.onclick = () => {
+                if (confirm(`Delete parking record for ${rec.plateNumber}? This will free the slot if still occupied.`)) {
+                    const slot = currentData.slots.find(s => s.slotNumber === rec.slotNumber);
+                    if (slot && !rec.exitTime && !slot.isSpecial) slot.slotStatus = 'available';
+                    currentData.records = currentData.records.filter(r => r.id !== rec.id);
+                    saveGlobalData(currentData);
+                    refreshUI();
+                    showToast(`Record deleted`, false);
+                }
+            };
+            row.insertCell(6).appendChild(delBtn);
+        });
+
+        // Entry car dropdown
+        const entryPlate = document.getElementById('entryPlate');
+        entryPlate.innerHTML = '<option value="">Select Car</option>';
+        currentData.cars.forEach(car => entryPlate.innerHTML += `<option value="${car.plateNumber}">${car.plateNumber} - ${car.driverName}</option>`);
+
+        refreshSlotSelection();
+
+        // Exit dropdown (records without exit)
+        const exitSelect = document.getElementById('exitRecord');
+        exitSelect.innerHTML = '<option value="">Select active record</option>';
+        currentData.records.filter(r => !r.exitTime).forEach(rec => {
+            const car = currentData.cars.find(c => c.plateNumber === rec.plateNumber);
+            exitSelect.innerHTML += `<option value="${rec.id}">${car ? car.plateNumber : rec.plateNumber} - Slot ${rec.slotNumber} (Entry: ${new Date(rec.entryTime).toLocaleString()})</option>`;
+        });
+
+        // Payment dropdown
+        const paymentSelect = document.getElementById('paymentRecord');
+        paymentSelect.innerHTML = '<option value="">Select completed record</option>';
+        const paidIds = currentData.payments.map(p => p.recordId);
+        currentData.records.filter(r => r.exitTime && !paidIds.includes(r.id)).forEach(rec => {
+            const car = currentData.cars.find(c => c.plateNumber === rec.plateNumber);
+            paymentSelect.innerHTML += `<option value="${rec.id}">${car ? car.plateNumber : rec.plateNumber} - Exit ${new Date(rec.exitTime).toLocaleString()} (Amount: ${rec.amount} RWF)</option>`;
+        });
+        if (typeof window.paymentAutoFillSetup === 'undefined') {
+            setupPaymentAutoFill();
+            window.paymentAutoFillSetup = true;
+        }
+
+        // Bill dropdown
+        const billSelect = document.getElementById('billRecordSelect');
+        billSelect.innerHTML = '<option value="">Select record</option>';
+        currentData.records.filter(r => r.exitTime).forEach(rec => {
+            const car = currentData.cars.find(c => c.plateNumber === rec.plateNumber);
+            billSelect.innerHTML += `<option value="${rec.id}">${car ? car.plateNumber : rec.plateNumber} (Entry: ${new Date(rec.entryTime).toLocaleString()})</option>`;
+        });
+
+        // Payment history table
+        const payBody = document.getElementById('paymentTableBody');
+        payBody.innerHTML = '';
+        currentData.payments.forEach(pay => {
+            const rec = currentData.records.find(r => r.id === pay.recordId);
+            if (!rec) return;
+            const car = currentData.cars.find(c => c.plateNumber === rec.plateNumber);
+            const row = payBody.insertRow();
+            row.insertCell(0).innerText = pay.id;
+            row.insertCell(1).innerText = car ? car.plateNumber : rec.plateNumber;
+            row.insertCell(2).innerText = new Date(rec.entryTime).toLocaleString();
+            row.insertCell(3).innerText = rec.exitTime ? new Date(rec.exitTime).toLocaleString() : '-';
+            row.insertCell(4).innerText = pay.amountPaid;
+            row.insertCell(5).innerText = new Date(pay.paymentDate).toLocaleString();
+        });
+
+        // Car Report
+        const carReportBody = document.getElementById('carReportBody');
+        carReportBody.innerHTML = '';
+        currentData.cars.forEach(car => {
+            const carRecords = currentData.records.filter(r => r.plateNumber === car.plateNumber);
+            const totalVisits = carRecords.length;
+            let totalDurationHours = 0;
+            let totalAmountDue = 0;
+            carRecords.forEach(rec => {
+                if (rec.durationMinutes) totalDurationHours += parseFloat(rec.durationMinutes) / 60;
+                if (rec.amount) totalAmountDue += rec.amount;
+            });
+            const totalPaid = currentData.payments
+                .filter(p => {
+                    const rec = currentData.records.find(r => r.id === p.recordId);
+                    return rec && rec.plateNumber === car.plateNumber;
+                })
+                .reduce((sum, p) => sum + p.amountPaid, 0);
+            const balance = totalAmountDue - totalPaid;
+            const row = carReportBody.insertRow();
+            row.insertCell(0).innerText = car.plateNumber;
+            row.insertCell(1).innerText = car.driverName;
+            row.insertCell(2).innerText = car.phoneNumber;
+            row.insertCell(3).innerText = totalVisits;
+            row.insertCell(4).innerText = totalDurationHours.toFixed(2);
+            row.insertCell(5).innerText = totalAmountDue;
+            row.insertCell(6).innerText = totalPaid;
+            row.insertCell(7).innerText = balance;
+        });
+
+        // Slot report (unchanged)
+        const normal = currentData.slots.filter(s => !s.isSpecial);
+        const specials = currentData.slots.filter(s => s.isSpecial);
+        const zones = ['A','B','C','D'];
+        let zoneHtml = '';
+        zones.forEach(z => {
+            const zoneSlots = normal.filter(s => s.slotNumber.startsWith(z));
+            const avail = zoneSlots.filter(s => s.slotStatus === 'available').length;
+            const occ = zoneSlots.filter(s => s.slotStatus === 'occupied').length;
+            const booked = zoneSlots.filter(s => s.slotStatus === 'booked').length;
+            zoneHtml += `<p class="text-white">Zone ${z}: ${zoneSlots.length} slots (Avail: ${avail}, Occ: ${occ}, Booked: ${booked})</p>`;
+        });
+        document.getElementById('slotStatsContainer').innerHTML = `
+            <div class="bg-gray-900 p-4 rounded-lg">
+                <h3 class="font-bold text-cyan-400">Overall Status</h3>
+                <p class="text-white">Total Normal Slots: ${normal.length}</p>
+                <p class="text-white">Available: ${normal.filter(s=>s.slotStatus==='available').length}</p>
+                <p class="text-white">Occupied: ${normal.filter(s=>s.slotStatus==='occupied').length}</p>
+                <p class="text-white">Booked: ${normal.filter(s=>s.slotStatus==='booked').length}</p>
+                <hr class="my-2 border-gray-700"><h3 class="font-bold text-cyan-400">Special Slots</h3>
+                ${specials.map(s => `<p class="text-white">${s.specialLabel} (${s.slotNumber})</p>`).join('')}
+            </div>
+            <div class="bg-gray-900 p-4 rounded-lg"><h3 class="font-bold text-cyan-400">Slots per Zone</h3>${zoneHtml}</div>
+        `;
+    }
+
+    // Reset all data
+    document.getElementById('resetDataBtn').addEventListener('click', () => {
+        if (confirm('⚠️ This will delete ALL cars, records, payments and reset slots to default. Are you sure?')) {
+            currentData = createDefaultData();
+            saveGlobalData(currentData);
+            refreshUI();
+            showToast('All data reset to factory defaults', false);
+            document.getElementById('entryForm')?.reset();
+            document.getElementById('exitForm')?.reset();
+            document.getElementById('paymentForm')?.reset();
+        }
+    });
+
+    // Car form submission
+    document.getElementById('carForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const plate = document.getElementById('plateNumber').value.trim().toUpperCase();
+        const driver = document.getElementById('driverName').value.trim();
+        const phone = document.getElementById('phoneNumber').value.trim();
+        if (!validatePlate(plate)) { showToast('Invalid plate format (ABC123D)', true); return; }
+        if (!validatePhone(phone)) { showToast('Phone must start with 078,072,073 and be 10 digits', true); return; }
+        if (currentData.cars.some(c => c.plateNumber === plate)) { showToast('Duplicate plate number', true); return; }
+        currentData.cars.push({ plateNumber: plate, driverName: driver, phoneNumber: phone });
+        saveGlobalData(currentData);
+        document.getElementById('carForm').reset();
+        refreshUI();
+        showToast(`Car ${plate} added`, false);
+        const tabBtn = document.querySelector('.tab-btn[data-tab="record"]');
+        if (tabBtn) tabBtn.click();
+        const plateSelect = document.getElementById('entryPlate');
+        plateSelect.value = plate;
+    });
+
+    function setDefaultEntryTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const defaultDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        const entryTimeInput = document.getElementById('entryTime');
+        if (entryTimeInput && !entryTimeInput.value) entryTimeInput.value = defaultDateTime;
+    }
+
+    // Radio change listener
+    const radioYes = document.querySelector('input[name="hasBooking"][value="yes"]');
+    const radioNo = document.querySelector('input[name="hasBooking"][value="no"]');
+    if (radioYes && radioNo) {
+        radioYes.addEventListener('change', () => refreshSlotSelection());
+        radioNo.addEventListener('change', () => refreshSlotSelection());
+    }
+
+    // Entry form
+    document.getElementById('entryForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const plate = document.getElementById('entryPlate').value;
+        const slotNum = document.getElementById('selectedSlot').value;
+        let entryTime = document.getElementById('entryTime').value;
+        if (!plate || !slotNum || !entryTime) { showToast('Please select car, slot, and entry time', true); return; }
+        if (!entryTime) setDefaultEntryTime();
+        const slot = currentData.slots.find(s => s.slotNumber === slotNum);
+        if (!slot || slot.isSpecial) { showToast('Invalid slot', true); return; }
+        const hasBookingRadio = document.querySelector('input[name="hasBooking"]:checked');
+        const hasBooking = hasBookingRadio ? hasBookingRadio.value === 'yes' : false;
+        if (hasBooking && slot.slotStatus !== 'booked') { showToast('You indicated a booking, but the selected slot is not booked', true); return; }
+        if (!hasBooking && slot.slotStatus !== 'available') { showToast('You did not have a booking, but the selected slot is not available', true); return; }
+        const newId = Date.now();
+        currentData.records.push({ id: newId, plateNumber: plate, slotNumber: slotNum, entryTime, exitTime: null, durationMinutes: null, amount: null });
+        slot.slotStatus = 'occupied';
+        saveGlobalData(currentData);
+        document.getElementById('entryForm').reset();
+        document.getElementById('selectedSlot').value = '';
+        setDefaultEntryTime();
+        refreshUI();
+        showToast(`Entry recorded for ${plate} at slot ${slotNum}`, false);
+    });
+
+    // Exit form with validation (exit time must be after entry time)
+    document.getElementById('exitForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const recId = parseInt(document.getElementById('exitRecord').value);
+        const exitTime = document.getElementById('exitTime').value;
+        const record = currentData.records.find(r => r.id === recId);
+        if (!record || record.exitTime) { showToast('Invalid record or already exited', true); return; }
+        const entryDate = new Date(record.entryTime);
+        const exitDate = new Date(exitTime);
+        if (exitDate < entryDate) {
+            showToast('Exit time cannot be before entry time!', true);
+            return;
+        }
+        const { durationMinutes, amount, valid } = calculateAmount(record.entryTime, exitTime);
+        if (!valid) { showToast('Error calculating duration', true); return; }
+        record.exitTime = exitTime;
+        record.durationMinutes = durationMinutes;
+        record.amount = amount;
+        const slot = currentData.slots.find(s => s.slotNumber === record.slotNumber);
+        if (slot && !slot.isSpecial) slot.slotStatus = 'available';
+        saveGlobalData(currentData);
+        document.getElementById('exitForm').reset();
+        refreshUI();
+        showToast(`Exit recorded. Duration: ${durationMinutes} minutes, Amount due: ${amount} RWF`, false);
+    });
+
+    // Payment form (same as before)
+    document.getElementById('paymentForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const recId = parseInt(document.getElementById('paymentRecord').value);
+        const amount = parseFloat(document.getElementById('amountPaid').value);
+        const payDate = document.getElementById('paymentDate').value;
+        const record = currentData.records.find(r => r.id === recId);
+        if (!record || !record.exitTime) { showToast('Record not completed (no exit time)', true); return; }
+        if (currentData.payments.some(p => p.recordId === recId)) { showToast('Payment already recorded', true); return; }
+        currentData.payments.push({ id: Date.now(), recordId: recId, amountPaid: amount, paymentDate: payDate });
+        saveGlobalData(currentData);
+        document.getElementById('paymentForm').reset();
+        refreshUI();
+        showToast(`Payment of ${amount} RWF recorded`, false);
+    });
+
+    // Daily report
+    document.getElementById('generateReportBtn').addEventListener('click', () => {
+        const date = document.getElementById('reportDate').value;
+        if (!date) { showToast('Select a date', true); return; }
+        const start = new Date(date); start.setHours(0,0,0,0);
+        const end = new Date(date); end.setHours(23,59,59,999);
+        const daily = currentData.payments.filter(p => {
+            const pd = new Date(p.paymentDate);
+            return pd >= start && pd <= end;
+        }).map(p => {
+            const rec = currentData.records.find(r => r.id === p.recordId);
+            const car = currentData.cars.find(c => c.plateNumber === rec?.plateNumber);
+            return { plate: car?.plateNumber, entry: rec?.entryTime, exit: rec?.exitTime, durationMinutes: rec?.durationMinutes, amount: p.amountPaid };
+        });
+        const div = document.getElementById('dailyReportResult');
+        if (daily.length === 0) { div.innerHTML = '<p class="text-white">No payments on this date</p>'; return; }
+        let html = '<table class="w-full text-sm text-white"><thead><tr><th>Plate</th><th>Entry</th><th>Exit</th><th>Duration(min)</th><th>Amount Paid</th></tr></thead><tbody>';
+        daily.forEach(d => html += `<tr><td class="text-white">${d.plate}</td><td class="text-white">${new Date(d.entry).toLocaleString()}</td><td class="text-white">${new Date(d.exit).toLocaleString()}</td><td class="text-white">${d.durationMinutes}</td><td class="text-white">${d.amount}</td></tr>`);
+        html += '</tbody></table>';
+        div.innerHTML = html;
+    });
+
+    // View bill
+    document.getElementById('viewBillBtn').addEventListener('click', () => {
+        const recId = parseInt(document.getElementById('billRecordSelect').value);
+        if (!recId) { showToast('Select a record', true); return; }
+        const rec = currentData.records.find(r => r.id === recId);
+        if (!rec) return;
+        const car = currentData.cars.find(c => c.plateNumber === rec.plateNumber);
+        const pay = currentData.payments.find(p => p.recordId === recId);
+        document.getElementById('billResult').innerHTML = `
+            <div class="bg-gray-900 p-4 rounded-lg mt-2 text-white">
+                <h3 class="font-bold text-cyan-400">Parking Bill</h3>
+                <p>Plate: ${car?.plateNumber || rec.plateNumber}</p>
+                <p>Entry: ${new Date(rec.entryTime).toLocaleString()}</p>
+                <p>Exit: ${rec.exitTime ? new Date(rec.exitTime).toLocaleString() : '-'}</p>
+                <p>Duration: ${rec.durationMinutes} minutes</p>
+                <p>Calculated Amount: ${rec.amount} RWF</p>
+                <p>Amount Paid: ${pay ? pay.amountPaid : 'Not paid'}</p>
+                <p>Payment Date: ${pay ? new Date(pay.paymentDate).toLocaleString() : '-'}</p>
+                <button onclick="window.print()" class="neon-button mt-2">Print Bill</button>
+            </div>
+        `;
+    });
+
+    // Tab switching
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    function activateTab(tabId) {
+        contents.forEach(c => c.classList.remove('active'));
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+        tabs.forEach(b => b.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+        if (tabId === 'record') { setDefaultEntryTime(); refreshSlotSelection(); }
+        refreshUI();
+    }
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => activateTab(btn.getAttribute('data-tab')));
+    });
+    activateTab('car');
+
+    // Theme (force dark)
+    const themeToggle = document.getElementById('themeToggle');
+    document.documentElement.classList.add('dark');
+    themeToggle.checked = true;
+    themeToggle.addEventListener('change', (e) => {
+        if (e.target.checked) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        localStorage.setItem('pssms_theme', e.target.checked ? 'dark' : 'light');
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('pssms_current_user');
+        window.location.href = 'login.html';
+    });
+
+    const currentUser = JSON.parse(localStorage.getItem('pssms_current_user'));
+    if (currentUser) document.getElementById('userDisplay').innerText = `${currentUser.username} (${currentUser.role})`;
+    else window.location.href = 'login.html';
+
+    refreshUI();
+    setDefaultEntryTime();
+</script>
+</body>
+</html>

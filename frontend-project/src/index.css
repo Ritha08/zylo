@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --psms-bg: #070a12;
+  --psms-panel: rgba(255,255,255,0.06);
+  --psms-panel-2: rgba(255,255,255,0.08);
+  --psms-text: rgba(255,255,255,0.92);
+  --psms-muted: rgba(255,255,255,0.62);
+  --psms-border: rgba(255,255,255,0.12);
+  --psms-blue: #2b7dff;
+  --psms-green: #21d07a;
+  --psms-red: #ff3b5c;
+}
+
+html, body { background: var(--psms-bg); color: var(--psms-text); }
+
+.psms-bg{ background: radial-gradient(1200px 700px at 15% 10%, rgba(43,125,255,0.16), transparent 55%),
+          radial-gradient(900px 600px at 80% 20%, rgba(33,208,122,0.14), transparent 55%),
+          var(--psms-bg); }
+
+.psms-navbar{ background: rgba(10,14,25,0.9); border-bottom: 1px solid var(--psms-border); position: sticky; top: 0; z-index: 50; }
+.psms-navbar-inner{ max-width: 1024px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+.psms-navbar-links{ display: flex; gap: 18px; flex-wrap: wrap; }
+.psms-navlink{ color: var(--psms-text); text-decoration: none; opacity: 0.88; }
+.psms-navlink:hover{ opacity: 1; text-decoration: underline; }
+
+.psms-btn{ border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: var(--psms-text); padding: 10px 14px; border-radius: 12px; cursor: pointer; }
+.psms-btn:hover{ background: rgba(255,255,255,0.12); }
+.psms-btn-green{ border-color: rgba(33,208,122,0.55); box-shadow: 0 0 18px rgba(33,208,122,0.18); }
+.psms-btn-danger{ border-color: rgba(255,59,92,0.55); box-shadow: 0 0 18px rgba(255,59,92,0.18); }
+
+.psms-page{ padding: 8px 0 28px; }
+.psms-title{ font-size: 30px; font-weight: 800; margin: 6px 0 18px; letter-spacing: 0.2px; }
+.psms-subtitle{ font-weight: 700; margin-bottom: 10px; color: rgba(255,255,255,0.9); }
+.psms-panel{ background: var(--psms-panel); border: 1px solid var(--psms-border); border-radius: 18px; padding: 16px; box-shadow: 0 18px 60px rgba(0,0,0,0.35); }
+
+.psms-form-inline{ display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.psms-input{ background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: var(--psms-text); padding: 10px 12px; border-radius: 12px; outline: none; }
+.psms-input:focus{ border-color: rgba(43,125,255,0.55); box-shadow: 0 0 0 3px rgba(43,125,255,0.18); }
+
+.psms-login-wrap{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 16px; }
+.psms-auth-card{ width: 420px; max-width: 92vw; background: rgba(255,255,255,0.06); border: 1px solid var(--psms-border); border-radius: 20px; padding: 22px; box-shadow: 0 28px 90px rgba(0,0,0,0.5); }
+.psms-auth-title{ text-align: center; font-weight: 900; font-size: 26px; margin: 6px 0 14px; }
+.psms-auth-tabs{ display: flex; gap: 10px; margin: 0 0 14px; }
+.psms-auth-tabs button{ flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: var(--psms-text); padding: 10px 12px; border-radius: 14px; cursor: pointer; }
+.psms-auth-tabs button.is-active{ border-color: rgba(43,125,255,0.55); box-shadow: 0 0 22px rgba(43,125,255,0.16); background: rgba(43,125,255,0.12); }
+
+.psms-auth-input{ width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: var(--psms-text); padding: 12px 12px; border-radius: 14px; margin: 10px 0; outline: none; }
+.psms-auth-input:focus{ border-color: rgba(43,125,255,0.55); box-shadow: 0 0 0 3px rgba(43,125,255,0.18); }
+
+.psms-auth-btn{ width: 100%; background: linear-gradient(135deg, rgba(43,125,255,0.9), rgba(43,125,255,0.35)); border: 1px solid rgba(43,125,255,0.6); color: white; padding: 12px 14px; border-radius: 14px; cursor: pointer; font-weight: 800; margin-top: 8px; box-shadow: 0 0 24px rgba(43,125,255,0.22); }
+.psms-auth-btn:hover{ filter: brightness(1.05); }
+
+.psms-auth-msg{ padding: 10px 12px; border-radius: 14px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color: var(--psms-text); }
+.psms-auth-msg.is-error{ border-color: rgba(255,59,92,0.5); box-shadow: 0 0 20px rgba(255,59,92,0.15); }
+.psms-auth-msg.is-success{ border-color: rgba(33,208,122,0.5); box-shadow: 0 0 20px rgba(33,208,122,0.15); }
+
+.psms-auth-hint{ text-align: center; font-size: 12px; color: var(--psms-muted); margin-top: 10px; }
+
+.psms-slot-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.psms-slot-card{ background: rgba(255,255,255,0.05); border-radius: 18px; border: 2px solid transparent; padding: 14px; min-height: 240px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.psms-slot-card:hover{ transform: translateY(-2px); }
+
+.psms-slot-card.is-occupied{ border-color: rgba(43,125,255,1); box-shadow: 0 0 26px rgba(43,125,255,0.25); }
+.psms-slot-card.is-available{ border-color: rgba(33,208,122,1); box-shadow: 0 0 26px rgba(33,208,122,0.22); }
+
+.psms-slot-top{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.psms-slot-id{ font-weight: 900; letter-spacing: 0.4px; }
+.psms-pill{ font-size: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); }
+.psms-pill.is-blue{ border-color: rgba(43,125,255,0.6); color: rgba(180,210,255,1); background: rgba(43,125,255,0.12); }
+.psms-pill.is-green{ border-color: rgba(33,208,122,0.6); color: rgba(170,255,213,1); background: rgba(33,208,122,0.12); }
+
+.psms-slot-icon{ display: flex; align-items: center; justify-content: center; padding: 8px 0 0; }
+.psms-slot-footer{ display: flex; justify-content: center; padding-top: 8px; }
+.psms-neon-label{ font-size: 11px; font-weight: 900; letter-spacing: 1px; color: rgba(255,255,255,0.65); }
+
