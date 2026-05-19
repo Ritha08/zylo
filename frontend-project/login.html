@@ -9,40 +9,44 @@
         tailwind.config = { darkMode: 'class' }
     </script>
     <style>
-        /* Force black background and neon colors */
         body {
-            background-color: #000000;
-            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        /* custom neon glow effects */
-        .neon-card {
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(2px);
+        .glass-card {
+            background: rgba(20, 20, 30, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
             border: 1px solid rgba(0, 255, 255, 0.3);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
         }
         .neon-input {
             background: #111;
-            border: 1px solid #333;
-            transition: all 0.2s ease;
+            border: 1px solid #2a2a2a;
             color: #0ff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: all 0.2s;
         }
         .neon-input:focus {
             border-color: #0ff;
-            box-shadow: 0 0 8px #0ff;
+            box-shadow: 0 0 12px #0ff;
             outline: none;
         }
         .neon-button {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            background: linear-gradient(95deg, #00c6ff, #0072ff);
             border: none;
+            border-radius: 40px;
+            padding: 12px;
+            font-weight: bold;
+            color: white;
             transition: 0.2s;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0,198,255,0.5);
         }
         .neon-button:hover {
-            box-shadow: 0 0 12px #00c6ff;
             transform: scale(1.02);
+            box-shadow: 0 0 20px #00c6ff;
         }
         .toggle-switch {
             position: relative;
@@ -85,79 +89,68 @@
             transform: translateX(24px);
             background-color: #000;
         }
-        .demo-text {
-            color: #888;
-            font-size: 0.75rem;
-        }
-        .demo-text span {
-            color: #0ff;
-            font-weight: 500;
-        }
+        .demo-text { color: #aaa; font-size: 0.75rem; }
+        .demo-text span { color: #0ff; font-weight: 500; }
     </style>
 </head>
-<body class="bg-black">
-
-<div class="min-h-screen flex items-center justify-center px-4">
-    <div class="neon-card rounded-2xl p-8 w-full max-w-md">
-        <div class="flex justify-between items-center mb-2">
-            <h2 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">PSSMS</h2>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-8">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">PSSMS</h1>
             <label class="toggle-switch">
                 <input type="checkbox" id="themeToggle">
                 <span class="slider"></span>
             </label>
         </div>
-        <p class="text-center text-gray-400 mb-6">Parking Space Sales Management System</p>
+        <p class="text-center text-gray-400 mb-8">Parking Space Sales Management System</p>
         <form id="loginForm">
-            <input type="text" id="username" placeholder="Username" class="neon-input w-full mb-4 p-3 rounded-lg" required>
-            <input type="password" id="password" placeholder="Password" class="neon-input w-full mb-4 p-3 rounded-lg" required autocomplete="off">
+            <input type="text" id="username" placeholder="Username" class="neon-input w-full mb-4" required autocomplete="off">
+            <input type="password" id="password" placeholder="Password" class="neon-input w-full mb-6" required autocomplete="off">
             <div id="errorMsg" class="text-red-400 text-sm mb-4 hidden"></div>
-            <button type="submit" class="neon-button w-full text-white py-3 rounded-lg font-semibold tracking-wider">Login</button>
+            <button type="submit" class="neon-button w-full">Login</button>
         </form>
         <div class="flex justify-center gap-6 mt-6 demo-text">
             <div>admin / <span>admin123</span></div>
             <div>manager / <span>manager123</span></div>
         </div>
     </div>
-</div>
-
-<script>
-    const users = {
-        admin: { username: "admin", password: "admin123", role: "admin" },
-        manager: { username: "manager", password: "manager123", role: "manager" }
-    };
-    const themeToggle = document.getElementById('themeToggle');
-    if (localStorage.getItem('pssms_theme') === 'dark') {
-        document.documentElement.classList.add('dark');
-        themeToggle.checked = true;
-    } else {
-        // ensure dark mode on by default for black theme
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('pssms_theme', 'dark');
-        themeToggle.checked = true;
-    }
-    themeToggle.addEventListener('change', (e) => {
-        if (e.target.checked) {
+    <script>
+        const users = {
+            admin: { username: "admin", password: "admin123", role: "admin" },
+            manager: { username: "manager", password: "manager123", role: "manager" }
+        };
+        const themeToggle = document.getElementById('themeToggle');
+        if (localStorage.getItem('pssms_theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            themeToggle.checked = true;
+        } else {
             document.documentElement.classList.add('dark');
             localStorage.setItem('pssms_theme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('pssms_theme', 'light');
+            themeToggle.checked = true;
         }
-    });
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const user = users[username];
-        if (user && user.password === password) {
-            localStorage.setItem('pssms_current_user', JSON.stringify({ username: user.username, role: user.role }));
-            window.location.href = 'dashboard.html';
-        } else {
-            const errorDiv = document.getElementById('errorMsg');
-            errorDiv.textContent = 'Invalid credentials';
-            errorDiv.classList.remove('hidden');
-        }
-    });
-</script>
+        themeToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('pssms_theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('pssms_theme', 'light');
+            }
+        });
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const user = users[username];
+            if (user && user.password === password) {
+                localStorage.setItem('pssms_current_user', JSON.stringify({ username: user.username, role: user.role }));
+                window.location.href = 'dashboard.html';
+            } else {
+                const errorDiv = document.getElementById('errorMsg');
+                errorDiv.textContent = 'Invalid credentials';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
