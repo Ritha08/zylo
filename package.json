@@ -4,9 +4,13 @@
   "description": "",
   "main": "server.js",
   "scripts": {
+    "dev": "concurrently -n fe,be -c cyan,yellow \"pnpm --dir frontend-project dev\" \"pnpm --dir backend-project dev\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
